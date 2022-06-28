@@ -17,7 +17,10 @@ export function Button({
     ...rest
 }: Props) {
     return (
-        <Container onPress={onPress} {...rest} >
+        <Container
+            onPress={onPress}
+            {...rest}
+        >
             <Title>
                 {title}
             </Title>
