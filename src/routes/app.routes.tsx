@@ -4,10 +4,17 @@ import { useTheme } from 'styled-components';
 import { MaterialIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-const { Navigator, Screen } = createBottomTabNavigator();
+export type BottomTabNavigatorProps = {
+    Listagem: undefined;
+    Cadastrar: undefined;
+    Resumo: undefined;
+}
+
+const { Navigator, Screen } = createBottomTabNavigator<BottomTabNavigatorProps>();
 
 import { Dashboard } from '../screens/Dashboard';
 import { Register } from '../screens/Register';
+
 
 
 export function AppRoutes() {

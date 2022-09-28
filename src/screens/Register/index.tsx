@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Modal,
     TouchableWithoutFeedback,
     Keyboard,
     Alert
 } from 'react-native';
-import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from "yup";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import uuid from 'react-native-uuid';
+
+import { useForm } from 'react-hook-form'
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 
 import { InputForm } from '../../components/Form/InputForm';
 import { Button } from '../../components/Form/Button';
@@ -24,11 +28,14 @@ import {
     Fields,
     TransactionsTypes
 } from './styles';
+import { BottomTabNavigatorProps } from '../../routes/app.routes';
 
 interface FormData {
     name: string;
     amount: string;
 }
+
+type RegisterProps = BottomTabScreenProps<BottomTabNavigatorProps, 'Cadastrar'>;
 
 const schema = Yup.object().shape({
     name: Yup
@@ -39,9 +46,11 @@ const schema = Yup.object().shape({
         .positive('Valor não pode ser negativo')
 })
 
-export function Register() {
+export function Register({ navigation, route }: RegisterProps) {
     const [transactionsType, setTransactionsType] = useState('');
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+
+    const dataKey = '@gofinance:transactions';
 
     const [category, setCategory] = useState({
         key: 'category',
@@ -51,6 +60,7 @@ export function Register() {
     const {
         control,
         handleSubmit,
+        reset,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(schema)
@@ -68,22 +78,50 @@ export function Register() {
         setCategoryModalOpen(false);
     }
 
-    function handleRegister(form: FormData) {
+    async function handleRegister(form: FormData) {
         if (!transactionsType)
             return Alert.alert('Selecione o tipo de transação');
 
         if (category.key === "category")
             return Alert.alert('Selecione uma categoria');
 
-
-
-        const data = {
+        const newData = {
+            id: String(uuid.v4()),
             name: form.name,
             amount: form.amount,
-            transactionsType,
-            category: category.key
+            type: transactionsType,
+            category: category.key,
+            date: new Date()
         }
-        console.log(data);
+
+
+        try {
+            //getItem() return the data as string
+            const data = await AsyncStorage.getItem(dataKey);
+            // convert to JSON, if data is not null
+            const currentData = data ? JSON.parse(data) : [];
+
+            // Concatenate de newData to currentData as JSON
+            const dataFormatted = [...currentData, newData];
+
+            // To store the new currentData in the AsyncStorage, after parse the data to string
+            await AsyncStorage.setItem(dataKey, JSON.stringify(dataFormatted));
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Erro ao cadastrar');
+        }
+
+        // To reset all input from react-hook-form
+        reset();
+
+        // To reset other fields that uses state
+        setTransactionsType('');
+        setCategory({
+            key: 'category',
+            name: 'Categoria',
+        });
+
+        navigation.navigate('Listagem');
     }
 
     return (
