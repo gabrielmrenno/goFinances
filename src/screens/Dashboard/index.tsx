@@ -32,6 +32,7 @@ export interface DataListProps extends TransactionCardProps {
 
 interface HighlightProps {
     total: string;
+    lastTransaction: string;
 }
 interface HighlightData {
     entries: HighlightProps,
@@ -45,6 +46,19 @@ export function Dashboard() {
     const [highlightData, setHighlightData] = useState<HighlightData>({} as HighlightData);
 
     const theme = useTheme();
+
+    function getLastTransitionDate(
+        collection: DataListProps[],
+        type: 'up' | 'down'
+    ) {
+        const lastTransaction = new Date(
+            Math.max.apply(Math, collection
+                .filter((transaction: DataListProps) => transaction.type === type)
+                .map((transaction: DataListProps) => new Date(transaction.date).getTime())));
+
+
+        return `${lastTransaction.getDate()} de ${lastTransaction.toLocaleString('pt-br', { month: 'long' })}`
+    }
 
     async function loadTransaction() {
         const dataKey = '@gofinance:transactions';
@@ -89,6 +103,10 @@ export function Dashboard() {
         setData(transactionsFormatted);
         setIsLoading(false);
 
+        const lastTransactionEntries = getLastTransitionDate(transactions, 'up');
+        const lastTransactionExpensives = getLastTransitionDate(transactions, 'down');
+        const balanceInterval = `01 a ${lastTransactionExpensives}`
+
         const total = entriesTotal - expensiveTotal;
 
         setHighlightData({
@@ -96,19 +114,22 @@ export function Dashboard() {
                 total: entriesTotal.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
-                })
+                }),
+                lastTransaction: `Ultima entrada dia ${lastTransactionEntries}`,
             },
             expensives: {
                 total: expensiveTotal.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
-                })
+                }),
+                lastTransaction: `Última saída dia ${lastTransactionExpensives}`
             },
             balance: {
                 total: total.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
-                })
+                }),
+                lastTransaction: balanceInterval
             }
         })
     }
@@ -160,20 +181,20 @@ export function Dashboard() {
                             <HighlightCard
                                 type="up"
                                 title="Entradas"
-                                amount={highlightData.entries.total}
-                                lastTransaction="Última entrada dia 13 de abril de 2022"
+                                amount={highlightData.entries?.total}
+                                lastTransaction={highlightData.entries?.lastTransaction}
                             />
                             <HighlightCard
                                 type="down"
                                 title="Saídas"
-                                amount={highlightData.expensives.total}
-                                lastTransaction="Última entrada dia 13 de abril de 2022"
+                                amount={highlightData.expensives?.total}
+                                lastTransaction={highlightData.expensives?.lastTransaction}
                             />
                             <HighlightCard
                                 type="total"
                                 title="Total"
-                                amount={highlightData.balance.total}
-                                lastTransaction="Última entrada dia 13 de abril de 2022"
+                                amount={highlightData.balance?.total}
+                                lastTransaction={highlightData.balance?.lastTransaction}
                             />
                         </HighlightCards>
 
