@@ -9,17 +9,16 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from "yup";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
-
-import { useForm } from 'react-hook-form'
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+
+import { useAuth } from '../../hooks/auth';
+import { useForm } from 'react-hook-form'
 
 import { InputForm } from '../../components/Form/InputForm';
 import { Button } from '../../components/Form/Button';
 import { TransactionTypeButton } from '../../components/Form/TransactionTypeButton';
 import { CategorySelectButton } from '../../components/Form/CategorySelectButton';
-
 import { CategorySelect } from '../CategorySelect'
-
 import {
     Container,
     Header,
@@ -51,7 +50,9 @@ export function Register({ navigation, route }: RegisterProps) {
     const [transactionsType, setTransactionsType] = useState('');
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
-    const dataKey = '@gofinance:transactions';
+    const { user } = useAuth();
+
+    const dataKey = `@gofinance:transactions_user:${user.id}`;
 
     const [category, setCategory] = useState({
         key: 'category',
